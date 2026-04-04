@@ -57,3 +57,10 @@ Medical imaging datasets & open-source clinical research communities
 
 ## Note
 All the models are available on HuggingFace: https://huggingface.co/SulaimanAhmed
+The model architecture and the image processing code is present in the "pyfiles" directory. 
+The "config" directory contains all the required files to run the web application.
+To run the django development server follow the steps below:
+1) Change directory from root to config using: cd config
+2) Now run server using: python manage.py runserver
+3) It'll take some time to initialize all the files and then it provides the development like upon clicking it the applicaiton opens.
+   
