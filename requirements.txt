@@ -1,0 +1,22 @@
+# ==========================================
+# MedScan AI - Python Dependencies
+# Generated for Django 4.2+ / TensorFlow 2.15+
+# ==========================================
+
+# ── Core Framework ───────────────────────
+django>=4.2,<5.0
+gunicorn>=21.2.0           # WSGI server for production
+
+# ── Machine Learning & Deep Learning ─────
+tensorflow>=2.15,<2.17     # Includes Keras & tf.GradientTape
+numpy>=1.26,<2.0           # Pinned <2.0 for TF compatibility
+scikit-learn>=1.3.0        # Required for joblib model + predict_proba
+joblib>=1.3.0              # Dementia model serialization
+
+# ── Image Processing & Computer Vision ──
+Pillow>=10.0.0             # PIL for image loading/resizing
+opencv-python>=4.8.0       # cv2 for Grad-CAM colormap & blending
+
+# ── Utilities & Deployment ───────────────
+whitenoise>=6.6.0          # Static file serving in production
+python-dotenv>=1.0.0       # Environment variable management
