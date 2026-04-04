@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lung Cancer Detection | MedScan AI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        .header {
+            background: white;
+            padding: 1rem 5%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .page-title h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .page-title p {
+            color: #666;
+        }
+        .upload-section {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 3rem;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+        }
+        .upload-area:hover {
+            background: #eef1ff;
+            border-color: #764ba2;
+        }
+        .upload-area.dragover {
+            background: #e0e7ff;
+            border-color: #764ba2;
+        }
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .file-input {
+            display: none;
+        }
+        .preview {
+            display: none;
+            margin: 2rem 0;
+        }
+        .preview img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .predict-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.3s;
+            margin-top: 1rem;
+        }
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .predict-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            display: none;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #f0fdf4;
+            border-radius: 10px;
+            border-left: 5px solid #10b981;
+            text-align: left;
+        }
+        .result h3 {
+            color: #10b981;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .result p {
+            margin-bottom: 0.5rem;
+            color: #333;
+            line-height: 1.5;
+        }
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Grad-CAM Comparison Section */
+        .gradcam-section {
+            display: none;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed #d1d5db;
+        }
+        .gradcam-section h4 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+        .comparison-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .scan-box {
+            flex: 1;
+            min-width: 280px;
+            text-align: center;
+        }
+        .scan-box p {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+        .scan-box img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+        .gradcam-disclaimer {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-top: 1.25rem;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-grid { flex-direction: column; align-items: center; }
+            .scan-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{% url 'home' %}" class="logo">
+            <span>⚕️</span>
+            <span>MedScan AI</span>
+        </a>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="container">
+        <div class="page-title">
+            <h1>🫁 Lung Cancer Detection</h1>
+            <p>Upload CT scan images for AI-powered nodule analysis</p>
+        </div>
+
+        <div class="upload-section">
+            <form id="uploadForm" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Drag & Drop CT Scan Image</h3>
+                    <p>or click to browse (PNG, JPG, DICOM supported)</p>
+                    <input type="file" name="ct_image" class="file-input" id="fileInput" accept="image/*,.dcm">
+                </div>
+
+                <div class="preview" id="preview">
+                    <img id="imagePreview" src="" alt="CT Scan Preview">
+                </div>
+
+                <button type="submit" class="predict-btn" id="predictBtn" style="display: none;">
+                    Run AI Prediction
+                </button>
+
+                <div class="loader" id="loader"></div>
+            </form>
+
+            <div class="result" id="result">
+                <h3>✅ Analysis Complete</h3>
+                <div id="resultContent"></div>
+
+                <!-- Grad-CAM Comparison -->
+                <div class="gradcam-section" id="gradcamSection">
+                    <h4>🔍 AI Attention Heatmap (Grad-CAM)</h4>
+                    <div class="comparison-grid">
+                        <div class="scan-box">
+                            <p>Original Scan</p>
+                            <img id="originalScanGrad" src="" alt="Original Scan">
+                        </div>
+                        <div class="scan-box">
+                            <p>Grad-CAM Overlay</p>
+                            <img id="gradcamImg" src="" alt="Grad-CAM Heatmap">
+                        </div>
+                    </div>
+                    <p class="gradcam-disclaimer">
+                        🔴 Red/yellow regions indicate where the AI focused to make its prediction.
+                        For interpretability purposes only; does not replace radiological assessment.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const imagePreview = document.getElementById('imagePreview');
+        const predictBtn = document.getElementById('predictBtn');
+        const uploadForm = document.getElementById('uploadForm');
+        const loader = document.getElementById('loader');
+        const result = document.getElementById('result');
+        const resultContent = document.getElementById('resultContent');
+        const gradcamSection = document.getElementById('gradcamSection');
+        const originalScanGrad = document.getElementById('originalScanGrad');
+        const gradcamImg = document.getElementById('gradcamImg');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.src = e.target.result;
+                preview.style.display = 'block';
+                predictBtn.style.display = 'inline-block';
+                result.style.display = 'none';
+                gradcamSection.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(uploadForm);
+            predictBtn.disabled = true;
+            loader.style.display = 'block';
+            result.style.display = 'none';
+            gradcamSection.style.display = 'none';
+
+            try {
+                const response = await fetch('{% url "predict_lung" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                });
+
+                const data = await response.json();
+
+                loader.style.display = 'none';
+                predictBtn.disabled = false;
+                result.style.display = 'block';
+
+                if (data.success) {
+                    resultContent.innerHTML = `
+                        <p><strong>Prediction:</strong> ${data.prediction}</p>
+                        <p><strong>Confidence:</strong> ${data.confidence}%</p>
+                        <p><strong>Recommendation:</strong> ${data.recommendation}</p>
+                    `;
+
+                    // Handle Grad-CAM
+                    if (data.gradcam && data.gradcam.success) {
+                        originalScanGrad.src = imagePreview.src;
+                        gradcamImg.src = data.gradcam.gradcam_image;
+                        gradcamSection.style.display = 'block';
+                    } else {
+                        gradcamSection.style.display = 'none';
+                        if (data.gradcam && data.gradcam.error) {
+                            console.warn('Grad-CAM generation skipped:', data.gradcam.error);
+                        }
+                    }
+                } else {
+                    resultContent.innerHTML = `<p style="color: #ef4444; text-align: center;">❌ Error: ${data.error}</p>`;
+                    gradcamSection.style.display = 'none';
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                predictBtn.disabled = false;
+                result.style.display = 'block';
+                resultContent.innerHTML = `<p style="color: #ef4444; text-align: center;">❌ Network error. Please check your connection and try again.</p>`;
+                gradcamSection.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

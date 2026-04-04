@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dementia Assessment | MedScan AI</title>
+    {% load static %}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; min-height: 100vh; }
+        .header { background: white; padding: 1rem 5%; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.5rem; font-weight: bold; color: #667eea; text-decoration: none; }
+        .back-link { color: #667eea; text-decoration: none; font-weight: 500; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        .page-title { text-align: center; margin-bottom: 2rem; }
+        .page-title h1 { color: #333; font-size: 2rem; margin-bottom: 0.5rem; }
+        .page-title p { color: #666; }
+
+        /* SHAP Gallery */
+
+        .shap-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+            margin-bottom: 4rem;
+        }
+        @media (max-width: 1000px) {
+            .shap-gallery {
+                grid-template-columns: 1fr;
+                max-width: 750px;
+                margin: 0 auto 4rem;
+            }
+        }
+        .shap-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .shap-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+        }
+        .shap-card img {
+            width: 100%;
+            height: auto;
+            min-height: 380px;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 1.25rem;
+            background: #f8f9ff;
+            border: 1px solid #e2e8f0;
+        }
+        .shap-card h3 {
+            color: #0f172a;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-weight: 700;
+        }
+        .shap-card p {
+            color: #475569;
+            font-size: 1rem;
+            line-height: 1.65;
+            flex-grow: 1;
+        }
+
+        /* Prediction Form */
+        .form-section { background: white; border-radius: 15px; padding: 2.5rem; box-shadow: 0 5px 20px rgba(0,0,0,0.1); max-width: 700px; margin: 0 auto 3rem; }
+        .form-section h2 { text-align: center; margin-bottom: 1.5rem; color: #333; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 500; margin-bottom: 0.4rem; color: #444; }
+        .form-group input, .form-group select { padding: 0.8rem; border: 2px solid #e0e7ff; border-radius: 8px; font-size: 1rem; transition: border 0.3s; }
+        .form-group input:focus, .form-group select:focus { border-color: #667eea; outline: none; }
+
+        .submit-btn { grid-column: span 2; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 1rem; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .submit-btn:disabled { background: #ccc; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Result Panel */
+        .result-panel { display: none; margin-top: 2rem; padding: 1.5rem; border-radius: 10px; border-left: 5px solid #667eea; background: #f8f9ff; }
+        .result-panel h3 { margin-bottom: 0.5rem; color: #333; }
+        .result-panel p { color: #555; margin-bottom: 0.5rem; }
+        .loader { display: none; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 1rem auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .disclaimer { text-align: center; color: #888; font-size: 0.85rem; margin-top: 2rem; padding: 1rem; background: #fff3cd; border-radius: 8px; }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .submit-btn { grid-column: span 1; }
+            .shap-gallery { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{% url 'home' %}" class="logo">⚕️ MedScan AI</a>
+        <a href="{% url 'home' %}" class="back-link">← Back to Home</a>
+    </div>
+
+    <div class="container">
+        <div class="page-title">
+            <h1>🧩 Dementia Risk Assessment</h1>
+            <p>AI-driven cognitive decline prediction with SHAP-based explainability</p>
+        </div>
+
+        <!-- SHAP EXPLANATIONS GALLERY -->
+        <div class="shap-gallery">
+            <div class="shap-card">
+                <img src="{% static 'scanner/images/shap_heatmap.png' %}" alt="SHAP Heatmap">
+                <h3>1. SHAP Values Heatmap</h3>
+                <p>Displays feature impact across all patients. Red indicates features pushing prediction toward dementia, blue indicates protective effects. <strong>EF, PS, age, and Global</strong> show the strongest consistent influence on model output.</p>
+            </div>
+            <div class="shap-card">
+                <img src="{% static 'scanner/images/shap_bar_chart.png' %}" alt="SHAP Bar Chart">
+                <h3>2. Global Feature Importance</h3>
+                <p>Ranking of features by mean absolute SHAP value. <strong>Ejection Fraction (EF)</strong> and <strong>Performance Status (PS)</strong> are the top predictors, followed by age and global cognitive scores.</p>
+            </div>
+            <div class="shap-card">
+                <img src="{% static 'scanner/images/shap_patient_manual.png' %}" alt="SHAP Patient Manual">
+                <h3>3. Individual Patient Impact</h3>
+                <p>Shows how each feature contributes to a specific patient's prediction. Bars pointing left decrease dementia risk, right increases it. Helps clinicians understand case-specific drivers.</p>
+            </div>
+            <div class="shap-card">
+                <img src="{% static 'scanner/images/shap_beeswarm.png' %}" alt="SHAP Beeswarm">
+                <h3>4. Feature Value vs. Impact</h3>
+                <p>Scatter plot showing how raw feature values correlate with SHAP impact. Higher age & lower EF/PS values cluster on the positive (risk) side, confirming clinical expectations.</p>
+            </div>
+            <div class="shap-card">
+                <img src="{% static 'scanner/images/shap_waterfall.png' %}" alt="SHAP Waterfall">
+                <h3>5. SHAP Waterfall Plot</h3>
+                <p>Step-by-step breakdown from baseline probability to final prediction. Each feature sequentially adjusts the output, providing a transparent audit trail for the AI's decision.</p>
+            </div>
+    </div>
+
+        <!-- PREDICTION FORM -->
+        <div class="form-section">
+            <h2>Patient Clinical Input</h2>
+            <form id="dementiaForm">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="age">Age (years)</label>
+                        <input type="number" step="0.01" id="age" name="age" placeholder="e.g., 52.67" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="male">Male (0)</option>
+                            <option value="female">Female (1)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="educationyears">Education (years)</label>
+                        <input type="number" step="0.1" id="educationyears" name="educationyears" placeholder="e.g., 11.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="EF">Ejection Fraction (EF)</label>
+                        <input type="number" step="0.0001" id="EF" name="EF" placeholder="e.g., -2.4033" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="PS">Performance Status (PS)</label>
+                        <input type="number" step="0.0001" id="PS" name="PS" placeholder="e.g., -1.2900" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="Global">Global Cognitive Score</label>
+                        <input type="number" step="0.0001" id="Global" name="Global" placeholder="e.g., -1.2870" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="diabetes">Diabetes (0=No, 1=Yes)</label>
+                        <select id="diabetes" name="diabetes" required>
+                            <option value="0">No (0)</option>
+                            <option value="1">Yes (1)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="smoking">Smoking Status</label>
+                        <select id="smoking" name="smoking" required>
+                            <option value="0">Never Smoker (0)</option>
+                            <option value="1">Ex-Smoker (1)</option>
+                            <option value="2">Current Smoker (2)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="grid-column: span 2;">
+                        <label for="hypertension">Hypertension (0=No, 1=Yes)</label>
+                        <select id="hypertension" name="hypertension" required>
+                            <option value="0">No (0)</option>
+                            <option value="1">Yes (1)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn" id="predictBtn">Run AI Prediction</button>
+                </div>
+            </form>
+            <div class="loader" id="loader"></div>
+            <div class="result-panel" id="resultPanel">
+                <h3 id="resultTitle"></h3>
+                <p id="resultDetails"></p>
+                <p id="resultRecommendation" style="font-weight: 500; margin-top: 0.5rem;"></p>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            ⚠️ <strong>Clinical Disclaimer:</strong> This AI tool provides probabilistic risk assessment based on SHAP-interpretable features.
+            Results should be used as decision support only and must be validated by qualified healthcare professionals.
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('dementiaForm');
+        const predictBtn = document.getElementById('predictBtn');
+        const loader = document.getElementById('loader');
+        const resultPanel = document.getElementById('resultPanel');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDetails = document.getElementById('resultDetails');
+        const resultRecommendation = document.getElementById('resultRecommendation');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            predictBtn.disabled = true;
+            loader.style.display = 'block';
+            resultPanel.style.display = 'none';
+
+            try {
+                const response = await fetch('{% url "predict_dementia" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                });
+
+                const data = await response.json();
+                loader.style.display = 'none';
+                predictBtn.disabled = false;
+                resultPanel.style.display = 'block';
+
+                if (data.success) {
+                    const isDemented = data.predicted_class === 1;
+                    resultTitle.textContent = isDemented ? '🔴 High Risk Detected' : '🟢 Low Risk Indicated';
+                    resultTitle.style.color = isDemented ? '#ef4444' : '#10b981';
+                    resultPanel.style.borderLeftColor = isDemented ? '#ef4444' : '#10b981';
+
+                    resultDetails.innerHTML = `
+                        <strong>Prediction:</strong> ${isDemented ? 'Dementia Risk Indicated' : 'No Dementia Risk'}<br>
+                        <strong>Model Confidence:</strong> ${data.probability}%<br>
+                        <strong>Probabilities:</strong> Non-Demented (${data.class_probabilities.non_demented}%) | Demented (${data.class_probabilities.demented}%)<br>
+                        <small style="color: #666; margin-top: 0.5rem; display: block;">
+                            <strong>Input Features:</strong> ${JSON.stringify(data.input_features, null, 2)}
+                        </small>
+                    `;
+                    resultRecommendation.textContent = `💡 Recommendation: ${data.recommendation}`;
+                } else {
+                    resultTitle.textContent = '❌ Prediction Failed';
+                    resultTitle.style.color = '#ef4444';
+                    resultDetails.textContent = `Error: ${data.error}`;
+                    resultRecommendation.textContent = '';
+                }
+            } catch (error) {
+                loader.style.display = 'none';
+                predictBtn.disabled = false;
+                resultPanel.style.display = 'block';
+                resultTitle.textContent = '❌ Network Error';
+                resultTitle.style.color = '#ef4444';
+                resultDetails.textContent = 'Could not connect to prediction server. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>
