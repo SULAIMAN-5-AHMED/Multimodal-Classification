@@ -62,5 +62,5 @@ The "config" directory contains all the required files to run the web applicatio
 To run the django development server follow the steps below:
 1) Change directory from root to config using: cd config
 2) Now run server using: python manage.py runserver
-3) It'll take some time to initialize all the files and then it provides the development like upon clicking it the applicaiton opens.
+3) It'll take some time to initialize all the files and then it provides the development link upon clicking it the applicaiton opens.
    
