@@ -84,6 +84,7 @@
         .preview {
             display: none;
             margin: 2rem 0;
+            position: relative;
         }
         .preview img {
             max-width: 100%;
@@ -192,6 +193,90 @@
             font-style: italic;
         }
 
+        /* 🌀 CT Scan Processing Animation */
+        .processing-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 10px;
+            background: rgba(102, 126, 234, 0.03);
+            display: none;
+            overflow: hidden;
+            z-index: 10;
+        }
+        .processing-overlay.active {
+            display: block;
+        }
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(102, 126, 234, 0.8),
+                rgba(118, 75, 162, 0.9),
+                rgba(102, 126, 234, 0.8),
+                transparent
+            );
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.6),
+                        0 0 30px rgba(118, 75, 162, 0.4);
+            animation: scanSweep 2s ease-in-out infinite;
+        }
+        .scan-pulse {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 80%;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            animation: pulseRing 2s ease-out infinite;
+        }
+        .scan-pulse:nth-child(2) {
+            animation-delay: 0.5s;
+        }
+        .scan-pulse:nth-child(3) {
+            animation-delay: 1s;
+        }
+        .processing-text {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+        @keyframes scanSweep {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+        @keyframes pulseRing {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.8;
+                border-color: rgba(102, 126, 234, 0.5);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+                border-color: transparent;
+            }
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
         @media (max-width: 768px) {
             .comparison-grid { flex-direction: column; align-items: center; }
             .scan-box { width: 100%; }
@@ -225,6 +310,15 @@
 
                 <div class="preview" id="preview">
                     <img id="imagePreview" src="" alt="CT Scan Preview">
+
+                    <!-- 🌀 Processing Animation Overlay -->
+                    <div class="processing-overlay" id="processingOverlay">
+                        <div class="scan-line"></div>
+                        <div class="scan-pulse"></div>
+                        <div class="scan-pulse"></div>
+                        <div class="scan-pulse"></div>
+                        <div class="processing-text">🔬 Analyzing scan...</div>
+                    </div>
                 </div>
 
                 <button type="submit" class="predict-btn" id="predictBtn" style="display: none;">
@@ -273,6 +367,7 @@
         const gradcamSection = document.getElementById('gradcamSection');
         const originalScanGrad = document.getElementById('originalScanGrad');
         const gradcamImg = document.getElementById('gradcamImg');
+        const processingOverlay = document.getElementById('processingOverlay');
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -308,6 +403,7 @@
                 predictBtn.style.display = 'inline-block';
                 result.style.display = 'none';
                 gradcamSection.style.display = 'none';
+                processingOverlay.classList.remove('active');
             };
             reader.readAsDataURL(file);
         }
@@ -321,6 +417,9 @@
             result.style.display = 'none';
             gradcamSection.style.display = 'none';
 
+            // 🌀 Trigger processing animation
+            processingOverlay.classList.add('active');
+
             try {
                 const response = await fetch('{% url "predict_pneumonia" %}', {
                     method: 'POST',
@@ -332,12 +431,13 @@
 
                 const data = await response.json();
 
+                // 🌀 Hide animation after API response
+                processingOverlay.classList.remove('active');
                 loader.style.display = 'none';
                 predictBtn.disabled = false;
                 result.style.display = 'block';
 
                 if (data.success) {
-                    // Note: Adjusted to match your predictor.py payload (prediction, confidence, recommendation)
                     resultContent.innerHTML = `
                         <p><strong>Prediction:</strong> ${data.prediction}</p>
                         <p><strong>Confidence:</strong> ${data.confidence}%</p>
@@ -360,6 +460,7 @@
                     gradcamSection.style.display = 'none';
                 }
             } catch (error) {
+                processingOverlay.classList.remove('active');
                 loader.style.display = 'none';
                 predictBtn.disabled = false;
                 result.style.display = 'block';
