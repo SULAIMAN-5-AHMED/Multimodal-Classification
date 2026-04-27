@@ -8,7 +8,6 @@ import joblib
 import cv2
 from django.conf import settings
 
-
 class MedicalImagePredictor:
     def __init__(self):
         self.models = {}
@@ -28,19 +27,21 @@ class MedicalImagePredictor:
         print("✅ All models loaded successfully.")
 
     def preprocess_image(self, image_file, target_size=(224, 224)):
+        """Standard preprocessing for all image models"""
         img = Image.open(image_file).convert('RGB')
         img = img.resize(target_size)
         img_array = np.array(img).astype('float32') / 255.0
         return np.expand_dims(img_array, axis=0)
 
     def _get_last_conv_layer(self, model):
+        """Automatically detect the last convolutional layer"""
         for layer in reversed(model.layers):
             if isinstance(layer, (tf.keras.layers.Conv2D, tf.keras.layers.SeparableConv2D)):
                 return layer
         return None
 
     def generate_gradcam(self, image_file, model_key):
-        """Generate Grad-CAM heatmap matching EXACT preprocessing of predict functions"""
+        """Generate Grad-CAM heatmap with safe tensor-to-numpy conversion"""
         print(f"🔬 Generating Grad-CAM for {model_key}...")
         try:
             model = self.models[model_key]
@@ -62,19 +63,22 @@ class MedicalImagePredictor:
 
             # 3. Compute gradients
             with tf.GradientTape() as tape:
-                conv_outputs, predictions = grad_model(img_array, training=False)
+                conv_outputs, predictions = grad_model(img_array)
                 pred_class = tf.argmax(predictions[0])
                 class_output = predictions[:, pred_class]
                 grads = tape.gradient(class_output, conv_outputs)
 
             # 4. Weighted combination & normalize
             pooled_grads = tf.reduce_mean(grads, axis=(0, 1, 2))
-            heatmap = conv_outputs[0] @ pooled_grads[..., tf.newaxis]
+            conv_outputs = conv_outputs[0]
+            heatmap = conv_outputs @ pooled_grads[..., tf.newaxis]
             heatmap = tf.squeeze(heatmap)
             heatmap = tf.maximum(heatmap, 0)
             max_val = tf.reduce_max(heatmap)
             heatmap = heatmap / (max_val + 1e-8)
-            heatmap = heatmap.numpy()
+
+            # 🔧 FIX: Safely convert to numpy (handles both TF tensors & auto-converted arrays)
+            heatmap = np.array(heatmap)
 
             # 5. Resize & blend
             heatmap = np.uint8(255 * heatmap)
@@ -85,7 +89,7 @@ class MedicalImagePredictor:
             heatmap_color = cv2.cvtColor(heatmap_color, cv2.COLOR_BGR2RGB)
             overlay = Image.blend(img_orig, Image.fromarray(heatmap_color), alpha=0.5)
 
-            # 6. Encode
+            # 6. Encode to base64
             buffered = io.BytesIO()
             overlay.save(buffered, format="PNG")
             img_base64 = base64.b64encode(buffered.getvalue()).decode()
@@ -100,6 +104,7 @@ class MedicalImagePredictor:
             print(f"❌ Grad-CAM failed for {model_key}: {str(e)}")
             return {'success': False, 'error': str(e)}
 
+    # ================= PREDICTION FUNCTIONS =================
     def predict_brain_tumor(self, image_file):
         try:
             brain_tumor = {0: "No tumor", 1: "glioma", 2: "meningioma", 3: "pituitary"}
@@ -112,7 +117,8 @@ class MedicalImagePredictor:
                 'tumor_type': brain_tumor[predicted_class], 'confidence': round(confidence, 2),
                 'recommendation': self._get_brain_recommendation(brain_tumor[predicted_class])
             }
-        except Exception as e: return {'success': False, 'error': str(e)}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     def predict_lung_cancer(self, image_file):
         try:
@@ -126,7 +132,8 @@ class MedicalImagePredictor:
                 'prediction': lung_classes[predicted_class], 'confidence': round(confidence, 2),
                 'recommendation': self._get_lung_recommendation(lung_classes[predicted_class])
             }
-        except Exception as e: return {'success': False, 'error': str(e)}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     def predict_pneumonia(self, image_file):
         try:
@@ -140,7 +147,8 @@ class MedicalImagePredictor:
                 'prediction': pneu_classes[predicted_class], 'confidence': round(confidence, 2),
                 'recommendation': self._get_pneumonia_recommendation(pneu_classes[predicted_class])
             }
-        except Exception as e: return {'success': False, 'error': str(e)}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     def predict_dementia(self, form_data):
         try:
@@ -161,8 +169,10 @@ class MedicalImagePredictor:
                 'input_features': {f: form_data[f] for f in DEMENTIA_FEATURE_ORDER},
                 'recommendation': self._get_dementia_recommendation(pred_class, 0)
             }
-        except Exception as e: return {'success': False, 'error': str(e)}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
+    # ================= RECOMMENDATION HELPERS =================
     def _get_brain_recommendation(self, t):
         return {"No tumor": "Normal findings.", "glioma": "Neurosurgery consult.", "meningioma": "Monitor/resect.", "pituitary": "Endo/neuro referral.", "Unknown": "Further eval."}.get(t, "Clinical correlation advised.")
     def _get_lung_recommendation(self, p):
