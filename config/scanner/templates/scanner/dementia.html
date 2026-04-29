@@ -18,7 +18,6 @@
         .page-title p { color: #666; }
 
         /* SHAP Gallery */
-
         .shap-gallery {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -137,7 +136,7 @@
                 <h3>5. SHAP Waterfall Plot</h3>
                 <p>Step-by-step breakdown from baseline probability to final prediction. Each feature sequentially adjusts the output, providing a transparent audit trail for the AI's decision.</p>
             </div>
-    </div>
+        </div>
 
         <!-- PREDICTION FORM -->
         <div class="form-section">
@@ -162,15 +161,15 @@
                     </div>
                     <div class="form-group">
                         <label for="EF">Ejection Fraction (EF)</label>
-                        <input type="number" step="0.0001" id="EF" name="EF" placeholder="e.g., -2.4033" required>
+                        <input type="number" step="0.0001" id="EF" name="EF" placeholder="Range: -5 to 5" min="-5" max="5" required>
                     </div>
                     <div class="form-group">
                         <label for="PS">Performance Status (PS)</label>
-                        <input type="number" step="0.0001" id="PS" name="PS" placeholder="e.g., -1.2900" required>
+                        <input type="number" step="0.0001" id="PS" name="PS" placeholder="Range: -5 to 5" min="-5" max="5" required>
                     </div>
                     <div class="form-group">
                         <label for="Global">Global Cognitive Score</label>
-                        <input type="number" step="0.0001" id="Global" name="Global" placeholder="e.g., -1.2870" required>
+                        <input type="number" step="0.0001" id="Global" name="Global" placeholder="Range: -5 to 5" min="-5" max="5" required>
                     </div>
                     <div class="form-group">
                         <label for="diabetes">Diabetes (0=No, 1=Yes)</label>
