@@ -483,7 +483,7 @@
 
         .card-metrics {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr); /* Updated to 2 columns */
             gap: 0.75rem;
             padding-top: 1.25rem;
             border-top: 1px solid var(--border);
@@ -727,6 +727,7 @@
         </div>
 
         <div class="grid">
+            <!-- Lung Cancer -->
             <a href="{% url 'lung_cancer' %}" class="card">
                 <div class="card-top">
                     <div class="card-icon">
@@ -743,11 +744,7 @@
                 <div class="card-metrics">
                     <div class="metric">
                         <span class="metric-label">Accuracy</span>
-                        <span class="metric-value">78.04%</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Sensitivity</span>
-                        <span class="metric-value">82.1%</span>
+                        <span class="metric-value">80.31%</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">Model</span>
@@ -762,6 +759,7 @@
                 </div>
             </a>
 
+            <!-- Pneumonia -->
             <a href="{% url 'pneumonia' %}" class="card">
                 <div class="card-top">
                     <div class="card-icon">
@@ -778,11 +776,7 @@
                 <div class="card-metrics">
                     <div class="metric">
                         <span class="metric-label">Accuracy</span>
-                        <span class="metric-value">78.62%</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">Specificity</span>
-                        <span class="metric-value">81.4%</span>
+                        <span class="metric-value">82.05%</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">Model</span>
@@ -797,6 +791,7 @@
                 </div>
             </a>
 
+            <!-- Brain Tumor -->
             <a href="{% url 'brain_tumor' %}" class="card">
                 <div class="card-top">
                     <div class="card-icon">
@@ -815,10 +810,6 @@
                         <span class="metric-value">88.50%</span>
                     </div>
                     <div class="metric">
-                        <span class="metric-label">Dice Score</span>
-                        <span class="metric-value">0.86</span>
-                    </div>
-                    <div class="metric">
                         <span class="metric-label">Model</span>
                         <span class="metric-value">v4.0</span>
                     </div>
@@ -831,6 +822,7 @@
                 </div>
             </a>
 
+            <!-- Dementia -->
             <a href="{% url 'dementia' %}" class="card">
                 <div class="card-top">
                     <div class="card-icon">
@@ -848,10 +840,6 @@
                     <div class="metric">
                         <span class="metric-label">Accuracy</span>
                         <span class="metric-value">90.24%</span>
-                    </div>
-                    <div class="metric">
-                        <span class="metric-label">AUC-ROC</span>
-                        <span class="metric-value">0.93</span>
                     </div>
                     <div class="metric">
                         <span class="metric-label">Model</span>
@@ -916,4 +904,3 @@
     </footer>
 </body>
 </html>
-
