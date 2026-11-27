@@ -28,7 +28,7 @@ class MedicalImagePredictor:
 
     def load_models(self):
         # Load image models
-        self.models['brain'] = tf.keras.models.load_model('../models/BrainTumorInceptionV3(A88L06).keras')
+        self.models['brain'] = tf.keras.models.load_model('../models/BrainTumorInceptionV3(A89L08).keras')
         self.models['lung'] = tf.keras.models.load_model('../models/LungCancer(A86L2).keras')
         self.models['pneumonia'] = tf.keras.models.load_model('../models/Penumonia(A82L1).keras')
 
