@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Dementia Assessment | MedScan AI</title>
     {% load static %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css">
@@ -29,13 +29,49 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html { scroll-behavior: smooth; }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Animations ===== */
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
+            50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1); }
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         /* ===== Top Bar ===== */
@@ -47,6 +83,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            width: 100%;
         }
         .top-bar-left { display: flex; align-items: center; gap: 0.5rem; }
         .top-bar-dot {
@@ -55,14 +92,10 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
             animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
-            50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1); }
-        }
 
         /* ===== Header ===== */
         .header {
-            background: var(--surface);
+            background: rgba(255, 255, 255, 0.9);
             padding: 1rem 5%;
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -72,7 +105,10 @@
             top: 0;
             z-index: 100;
             backdrop-filter: blur(12px);
+            width: 100%;
+            transition: box-shadow 0.3s ease;
         }
+        .header.scrolled { box-shadow: var(--shadow-md); }
 
         .logo {
             display: flex;
@@ -88,6 +124,11 @@
             align-items: center;
             justify-content: center;
             box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .logo:hover .logo-mark {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
         }
         .logo-mark svg { width: 24px; height: 24px; color: white; }
         .logo-text {
@@ -120,7 +161,7 @@
             font-size: 0.9rem;
             padding: 0.5rem 1rem;
             border-radius: 8px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             border: 1px solid var(--border);
             background: var(--surface);
         }
@@ -128,10 +169,12 @@
             color: var(--accent);
             border-color: var(--accent);
             background: rgba(0, 163, 191, 0.05);
+            transform: translateX(-3px);
         }
 
         /* ===== Container ===== */
         .container {
+            width: 100%;
             max-width: 1100px;
             margin: 0 auto;
             padding: 3rem 5%;
@@ -140,10 +183,12 @@
         .page-title {
             text-align: center;
             margin-bottom: 3rem;
+            opacity: 0;
+            animation: slideUpFade 0.6s ease-out forwards;
         }
         .page-title h1 {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 2.25rem;
+            font-size: clamp(1.75rem, 4vw, 2.25rem);
             font-weight: 700;
             color: var(--primary);
             letter-spacing: -1px;
@@ -159,16 +204,17 @@
         /* ===== SHAP Gallery ===== */
         .shap-gallery {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
             margin-bottom: 4rem;
         }
-        @media (max-width: 1000px) {
-            .shap-gallery {
-                grid-template-columns: 1fr;
-                max-width: 750px;
-                margin: 0 auto 4rem;
-            }
+
+        /* Perfectly balance the 5th item */
+        .shap-card:nth-last-child(1):nth-child(odd) {
+            grid-column: 1 / -1;
+            max-width: 600px;
+            justify-self: center;
+            width: 100%;
         }
 
         .shap-card {
@@ -182,7 +228,15 @@
             flex-direction: column;
             position: relative;
             overflow: hidden;
+            opacity: 0;
+            animation: slideUpFade 0.6s ease-out forwards;
         }
+        .shap-card:nth-child(1) { animation-delay: 0.1s; }
+        .shap-card:nth-child(2) { animation-delay: 0.2s; }
+        .shap-card:nth-child(3) { animation-delay: 0.3s; }
+        .shap-card:nth-child(4) { animation-delay: 0.4s; }
+        .shap-card:nth-child(5) { animation-delay: 0.5s; }
+
         .shap-card::before {
             content: '';
             position: absolute;
@@ -194,7 +248,7 @@
             transition: transform 0.4s ease;
         }
         .shap-card:hover {
-            transform: translateY(-4px);
+            transform: translateY(-6px);
             border-color: transparent;
             box-shadow: var(--shadow-xl);
         }
@@ -203,14 +257,17 @@
         .shap-card img {
             width: 100%;
             height: auto;
-            min-height: 380px;
-            max-height: 500px;
+            min-height: 280px;
+            max-height: 400px;
             object-fit: contain;
             border-radius: 12px;
             margin-bottom: 1.25rem;
             background: var(--bg);
             border: 1px solid var(--border);
+            transition: transform 0.3s ease;
         }
+        .shap-card:hover img { transform: scale(1.02); }
+
         .shap-card h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
             color: var(--primary);
@@ -240,8 +297,11 @@
             border-radius: 16px;
             padding: 2.5rem;
             box-shadow: var(--shadow-md);
+            width: 100%;
             max-width: 700px;
             margin: 0 auto 3rem;
+            opacity: 0;
+            animation: slideUpFade 0.6s ease-out 0.3s forwards;
         }
         .form-section h2 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -255,7 +315,7 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.25rem;
         }
         .form-group {
@@ -274,16 +334,18 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 0.95rem;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             background: var(--surface);
             color: var(--text);
             font-family: inherit;
+            width: 100%;
         }
         .form-group input:focus,
         .form-group select:focus {
             border-color: var(--accent);
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 163, 191, 0.1);
+            box-shadow: 0 0 0 3px rgba(0, 163, 191, 0.15);
+            transform: translateY(-1px);
         }
         .form-group input::placeholder {
             color: var(--text-muted);
@@ -291,8 +353,9 @@
         }
 
         .submit-btn {
-            grid-column: span 2;
+            grid-column: 1 / -1;
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            background-size: 200% auto;
             color: white;
             border: none;
             padding: 1rem;
@@ -313,6 +376,10 @@
         .submit-btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
+            background-position: right center;
+        }
+        .submit-btn:active {
+            transform: translateY(0);
         }
         .submit-btn:disabled {
             background: var(--text-muted);
@@ -330,11 +397,7 @@
             border-radius: 12px;
             border-left: 4px solid var(--accent);
             background: rgba(0, 163, 191, 0.05);
-            animation: fadeIn 0.4s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            animation: fadeInScale 0.4s ease forwards;
         }
         .result-panel h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -373,12 +436,8 @@
             border-radius: 50%;
             width: 36px;
             height: 36px;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
             margin: 1.5rem auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         /* ===== Disclaimer ===== */
@@ -391,6 +450,7 @@
             background: rgba(245, 158, 11, 0.05);
             border-radius: 12px;
             border: 1px solid rgba(245, 158, 11, 0.2);
+            width: 100%;
             max-width: 700px;
             margin-left: auto;
             margin-right: auto;
@@ -399,6 +459,8 @@
             justify-content: center;
             gap: 0.75rem;
             line-height: 1.6;
+            opacity: 0;
+            animation: slideUpFade 0.6s ease-out 0.5s forwards;
         }
         .disclaimer svg {
             flex-shrink: 0;
@@ -411,14 +473,18 @@
 
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
-            .header { padding: 1rem 5%; }
+            .header { padding: 0.875rem 5%; }
             .logo-text span { display: none; }
             .form-grid { grid-template-columns: 1fr; }
             .submit-btn { grid-column: span 1; }
             .shap-gallery { grid-template-columns: 1fr; }
+            .shap-card:nth-last-child(1):nth-child(odd) {
+                grid-column: span 1;
+                max-width: 100%;
+            }
             .container { padding: 2rem 5%; }
             .form-section { padding: 1.5rem; }
-            .page-title h1 { font-size: 1.75rem; }
+            .disclaimer { flex-direction: column; text-align: left; align-items: flex-start; }
         }
     </style>
 </head>
@@ -432,7 +498,7 @@
     </div>
 
     <!-- Header -->
-    <div class="header">
+    <div class="header" id="mainHeader">
         <a href="{% url 'home' %}" class="logo">
             <div class="logo-mark">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -534,7 +600,7 @@
                             <option value="2">Current Smoker (2)</option>
                         </select>
                     </div>
-                    <div class="form-group" style="grid-column: span 2;">
+                    <div class="form-group" style="grid-column: 1 / -1;">
                         <label for="hypertension">Hypertension (0=No, 1=Yes)</label>
                         <select id="hypertension" name="hypertension" required>
                             <option value="0">No (0)</option>
@@ -577,6 +643,16 @@
         const resultTitle = document.getElementById('resultTitle');
         const resultDetails = document.getElementById('resultDetails');
         const resultRecommendation = document.getElementById('resultRecommendation');
+        const header = document.getElementById('mainHeader');
+
+        // Add subtle shadow to header on scroll
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();

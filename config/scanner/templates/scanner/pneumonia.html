@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pneumonia Detection | MedScan AI</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/plus-jakarta-sans@5.0.0/index.css">
@@ -14,6 +14,7 @@
             --accent-light: #4DD0E1;
             --success: #10B981;
             --warning: #F59E0B;
+            --error: #EF4444;
             --bg: #F8FAFC;
             --surface: #FFFFFF;
             --text: #0A2540;
@@ -27,13 +28,63 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html { scroll-behavior: smooth; }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg);
             min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
             color: var(--text);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+        }
+
+        /* ===== Animations ===== */
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
+            50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1); }
+        }
+
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes scanSweep {
+            0% { top: -10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0.8;
+                border-color: rgba(77, 208, 225, 0.6);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.5);
+                opacity: 0;
+                border-color: transparent;
+            }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
         }
 
         /* ===== Top Bar ===== */
@@ -45,6 +96,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            width: 100%;
         }
         .top-bar-left { display: flex; align-items: center; gap: 0.5rem; }
         .top-bar-dot {
@@ -53,14 +105,10 @@
             box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
             animation: pulse 2s infinite;
         }
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); }
-            50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1); }
-        }
 
         /* ===== Header ===== */
         .header {
-            background: var(--surface);
+            background: rgba(255, 255, 255, 0.9);
             padding: 1rem 5%;
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -70,7 +118,10 @@
             top: 0;
             z-index: 100;
             backdrop-filter: blur(12px);
+            width: 100%;
+            transition: box-shadow 0.3s ease;
         }
+        .header.scrolled { box-shadow: var(--shadow-md); }
 
         .logo {
             display: flex;
@@ -86,6 +137,11 @@
             align-items: center;
             justify-content: center;
             box-shadow: var(--shadow-md);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .logo:hover .logo-mark {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
         }
         .logo-mark svg { width: 24px; height: 24px; color: white; }
         .logo-text {
@@ -118,7 +174,7 @@
             font-size: 0.9rem;
             padding: 0.5rem 1rem;
             border-radius: 8px;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
             border: 1px solid var(--border);
             background: var(--surface);
         }
@@ -126,10 +182,12 @@
             color: var(--accent);
             border-color: var(--accent);
             background: rgba(0, 163, 191, 0.05);
+            transform: translateX(-3px);
         }
 
         /* ===== Main Container ===== */
         .container {
+            width: 100%;
             max-width: 900px;
             margin: 0 auto;
             padding: 3rem 5%;
@@ -138,10 +196,12 @@
         .page-title {
             text-align: center;
             margin-bottom: 2.5rem;
+            opacity: 0;
+            animation: slideUpFade 0.6s ease-out forwards;
         }
         .page-title h1 {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: 2.25rem;
+            font-size: clamp(1.75rem, 4vw, 2.25rem);
             font-weight: 700;
             color: var(--primary);
             letter-spacing: -1px;
@@ -161,6 +221,9 @@
             border-radius: 16px;
             padding: 2.5rem;
             box-shadow: var(--shadow-md);
+            width: 100%;
+            opacity: 0;
+            animation: slideUpFade 0.6s ease-out 0.15s forwards;
         }
 
         .upload-area {
@@ -169,15 +232,16 @@
             padding: 3rem 2rem;
             background: rgba(0, 163, 191, 0.03);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
         }
         .upload-area:hover {
-            background: rgba(0, 163, 191, 0.06);
+            background: rgba(0, 163, 191, 0.08);
             border-color: var(--accent);
+            transform: translateY(-2px);
         }
         .upload-area.dragover {
-            background: rgba(0, 163, 191, 0.1);
+            background: rgba(0, 163, 191, 0.12);
             border-color: var(--accent);
             transform: scale(1.01);
         }
@@ -187,7 +251,10 @@
             color: var(--accent);
             display: flex;
             justify-content: center;
+            transition: transform 0.3s ease;
         }
+        .upload-area:hover .upload-icon { transform: translateY(-4px); }
+
         .upload-area h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
             font-size: 1.25rem;
@@ -211,6 +278,7 @@
             overflow: hidden;
             border: 1px solid var(--border);
             background: var(--bg);
+            animation: fadeInScale 0.4s ease forwards;
         }
         .preview img {
             width: 100%;
@@ -222,6 +290,7 @@
         /* ===== Button & Loader ===== */
         .predict-btn {
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            background-size: 200% auto;
             color: white;
             border: none;
             padding: 1rem 2.5rem;
@@ -241,7 +310,9 @@
         .predict-btn:hover {
             transform: translateY(-2px);
             box-shadow: var(--shadow-lg);
+            background-position: right center;
         }
+        .predict-btn:active { transform: translateY(0); }
         .predict-btn:disabled {
             background: var(--text-muted);
             cursor: not-allowed;
@@ -257,12 +328,8 @@
             border-radius: 50%;
             width: 36px;
             height: 36px;
-            animation: spin 1s linear infinite;
+            animation: spin 0.8s linear infinite;
             margin: 1.5rem auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
 
         /* ===== Result Section ===== */
@@ -274,11 +341,7 @@
             border-radius: 12px;
             border-left: 4px solid var(--success);
             text-align: left;
-            animation: fadeIn 0.4s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            animation: fadeInScale 0.4s ease forwards;
         }
         .result h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -305,6 +368,8 @@
             margin-top: 2rem;
             padding-top: 2rem;
             border-top: 1px solid var(--border);
+            animation: slideUpFade 0.5s ease-out 0.2s forwards;
+            opacity: 0;
         }
         .gradcam-section h4 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -316,10 +381,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            gap: 0.5rem;
         }
         .comparison-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             align-items: flex-start;
         }
@@ -342,6 +408,11 @@
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border);
             background: var(--bg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .scan-box img:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
         }
         .gradcam-disclaimer {
             text-align: center;
@@ -368,6 +439,7 @@
         }
         .processing-overlay.active {
             display: block;
+            animation: fadeInScale 0.3s ease forwards;
         }
         .scan-line {
             position: absolute;
@@ -418,37 +490,13 @@
             gap: 0.5rem;
         }
 
-        @keyframes scanSweep {
-            0% { top: -10%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 110%; opacity: 0; }
-        }
-        @keyframes pulseRing {
-            0% {
-                transform: translate(-50%, -50%) scale(0.8);
-                opacity: 0.8;
-                border-color: rgba(77, 208, 225, 0.6);
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 0;
-                border-color: transparent;
-            }
-        }
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0.7; }
-            50% { opacity: 1; }
-        }
-
         /* ===== Responsive ===== */
         @media (max-width: 768px) {
-            .header { padding: 1rem 5%; }
+            .header { padding: 0.875rem 5%; }
             .logo-text span { display: none; }
-            .comparison-grid { grid-template-columns: 1fr; }
             .container { padding: 2rem 5%; }
             .upload-section { padding: 1.5rem; }
-            .page-title h1 { font-size: 1.75rem; }
+            .comparison-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -462,7 +510,7 @@
     </div>
 
     <!-- Header -->
-    <div class="header">
+    <div class="header" id="mainHeader">
         <a href="{% url 'home' %}" class="logo">
             <div class="logo-mark">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -560,7 +608,7 @@
         </div>
     </div>
 
-    <!-- JavaScript Logic (Unchanged) -->
+    <!-- JavaScript Logic (Unchanged + Header Scroll Effect) -->
     <script>
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
@@ -575,6 +623,16 @@
         const originalScanGrad = document.getElementById('originalScanGrad');
         const gradcamImg = document.getElementById('gradcamImg');
         const processingOverlay = document.getElementById('processingOverlay');
+        const header = document.getElementById('mainHeader');
+
+        // Add subtle shadow to header on scroll
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 10) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+        });
 
         uploadArea.addEventListener('click', () => fileInput.click());
 
